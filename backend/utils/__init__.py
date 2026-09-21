@@ -1,0 +1,1 @@
+"""Skill Swap — shared utilities."""
