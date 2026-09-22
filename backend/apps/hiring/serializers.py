@@ -54,6 +54,10 @@ class HireRequestCreateSerializer(serializers.ModelSerializer):
         validated_data['status'] = HireRequest.Status.PENDING
         return super().create(validated_data)
 
+    def to_representation(self, instance):
+        # Return the full representation including client details
+        return HireRequestSerializer(instance, context=self.context).data
+
 
 class HireRequestStatusSerializer(serializers.Serializer):
     """Serializer for status transition actions."""

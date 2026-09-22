@@ -27,6 +27,8 @@ class UserSkillSerializer(serializers.ModelSerializer):
 
 class UserSkillCreateSerializer(serializers.ModelSerializer):
     """Write serializer for creating/updating user skills."""
+    
+    skill = serializers.CharField()
 
     class Meta:
         model = UserSkill
@@ -37,9 +39,20 @@ class UserSkillCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate_skill(self, value):
-        if not value.is_active:
+        from apps.skills.models import Skill, Category
+        skill_name = value.strip()
+        skill = Skill.objects.filter(name__iexact=skill_name).first()
+        if not skill:
+            category, _ = Category.objects.get_or_create(
+                name='Other',
+                defaults={'description': 'Auto-created category for custom skills'}
+            )
+            # Create a properly capitalized version of the skill name
+            skill = Skill.objects.create(name=skill_name.title(), category=category)
+            
+        if not skill.is_active:
             raise serializers.ValidationError('Cannot add an inactive skill.')
-        return value
+        return skill
 
     def validate(self, attrs):
         user = self.context['request'].user

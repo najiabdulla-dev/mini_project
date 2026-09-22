@@ -14,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from apps.authentication.permissions import IsVerifiedAndActive
+from apps.notifications.models import Notification
 from .models import HireRequest
 from .serializers import (
     HireRequestSerializer,
@@ -167,6 +168,51 @@ class HireRequestViewSet(viewsets.ModelViewSet):
         if action_name == 'complete':
             hire_request.completed_at = timezone.now()
         hire_request.save()
+
+        # Generate notifications and automated messages
+        if action_name == 'accept':
+            Notification.objects.create(
+                user=hire_request.client,
+                title='Hire Request Accepted',
+                message=f'{hire_request.provider.get_full_name()} has accepted your hire request for "{hire_request.title}".',
+                type=Notification.Type.HIRE_ACCEPTED,
+                data={'hire_request_id': hire_request.id}
+            )
+        elif action_name == 'reject':
+            Notification.objects.create(
+                user=hire_request.client,
+                title='Hire Request Rejected',
+                message=f'{hire_request.provider.get_full_name()} has declined your hire request for "{hire_request.title}".',
+                type=Notification.Type.HIRE_REJECTED,
+                data={'hire_request_id': hire_request.id}
+            )
+        elif action_name == 'start':
+            # Check if a conversation already exists
+            from apps.messaging.models import Message
+            has_messaged = Message.objects.filter(
+                (Q(sender=hire_request.client, receiver=hire_request.provider) |
+                 Q(sender=hire_request.provider, receiver=hire_request.client))
+            ).exists()
+            
+            if not has_messaged:
+                # Create an automated first message from provider to client
+                Message.objects.create(
+                    sender=hire_request.provider,
+                    receiver=hire_request.client,
+                    hire_request=hire_request,
+                    content=f"Hi, I have started the job for '{hire_request.title}'. Let's discuss the details here.",
+                    is_read=False
+                )
+        elif action_name == 'complete':
+            # Notify the other party that the job was marked complete
+            other_user = hire_request.provider if user == hire_request.client else hire_request.client
+            Notification.objects.create(
+                user=other_user,
+                title='Job Completed',
+                message=f'{user.get_full_name()} marked the job "{hire_request.title}" as completed.',
+                type=Notification.Type.HIRE_COMPLETED,
+                data={'hire_request_id': hire_request.id}
+            )
 
         return Response({
             'success': True,

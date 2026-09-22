@@ -23,6 +23,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
 
     def validate(self, attrs):
+        if self.username_field in attrs:
+            attrs[self.username_field] = attrs[self.username_field].lower()
+            
         data = super().validate(attrs)
 
         user = self.user
