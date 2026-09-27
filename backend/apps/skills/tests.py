@@ -18,11 +18,11 @@ class CategoryAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.admin = User.objects.create_user(
             email='admin@test.com', password='TestPass123!',
-            first_name='Admin', last_name='User', is_verified=True, is_admin=True,
+            first_name='Admin', last_name='User', is_email_verified=True, is_admin=True,
         )
         self.category = Category.objects.create(
             name='Web Development', icon='🌐', description='Web dev skills',
@@ -62,11 +62,11 @@ class SkillAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.admin = User.objects.create_user(
             email='admin@test.com', password='TestPass123!',
-            first_name='Admin', last_name='User', is_verified=True, is_admin=True,
+            first_name='Admin', last_name='User', is_email_verified=True, is_admin=True,
         )
         self.category = Category.objects.create(name='Web Development')
         self.skill = Skill.objects.create(

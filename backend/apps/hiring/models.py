@@ -54,6 +54,7 @@ class HireRequest(TimestampedModel):
         default=Status.PENDING,
         db_index=True,
     )
+    is_seen = models.BooleanField(default=False)
     rejection_reason = models.TextField(blank=True, default='')
     completed_at = models.DateTimeField(null=True, blank=True)
 

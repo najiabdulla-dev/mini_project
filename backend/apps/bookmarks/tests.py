@@ -18,11 +18,11 @@ class BookmarkAPITest(TestCase):
         self.client_api = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.other = User.objects.create_user(
             email='other@test.com', password='TestPass123!',
-            first_name='Other', last_name='User', is_verified=True,
+            first_name='Other', last_name='User', is_email_verified=True,
         )
         self.client_api.force_authenticate(self.user)
 

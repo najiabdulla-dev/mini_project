@@ -29,7 +29,7 @@ class IsVerified(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.is_verified
+            and request.user.is_email_verified
         )
 
 
@@ -97,7 +97,7 @@ class IsVerifiedAndActive(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.is_verified
+            and request.user.is_email_verified
             and request.user.is_active
             and not request.user.is_deleted
         )

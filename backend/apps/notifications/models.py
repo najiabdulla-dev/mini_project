@@ -8,6 +8,10 @@ FCM push delivery will be wired in Phase 2.
 from django.db import models
 from django.conf import settings
 from utils.models import TimestampedModel
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class Notification(TimestampedModel):
@@ -60,3 +64,16 @@ class Notification(TimestampedModel):
 
     def __str__(self):
         return f'{self.title} → {self.user.email}'
+
+@receiver(post_save, sender=Notification)
+def broadcast_notification(sender, instance, created, **kwargs):
+    if created:
+        from apps.notifications.serializers import NotificationSerializer
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'user_{instance.user.id}',
+            {
+                'type': 'new_notification',
+                'notification': NotificationSerializer(instance).data
+            }
+        )

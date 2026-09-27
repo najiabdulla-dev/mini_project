@@ -81,7 +81,7 @@ def main():
     print(f'   Status: {resp.status}')
     print(f'   Name: {profile["full_name"]}')
     print(f'   Email: {profile["email"]}')
-    print(f'   Verified: {profile["is_verified"]}')
+    print(f'   Verified: {profile["is_email_verified"]}')
     assert resp.status == 200
 
     # 4. Update Profile

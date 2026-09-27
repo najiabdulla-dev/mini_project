@@ -31,7 +31,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = self.user
 
         # Check if user is verified
-        if not user.is_verified:
+        if not user.is_email_verified:
             from utils.exceptions import AccountNotVerifiedError
             raise AccountNotVerifiedError()
 
@@ -41,7 +41,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             raise AccountDeactivatedError()
 
         # Add user data to response
-        data['user'] = UserSerializer(user).data
+        data['user'] = UserSerializer(user, context=self.context).data
 
         return data
 
@@ -95,7 +95,7 @@ class UserSerializer(serializers.ModelSerializer):
             'phone', 'profile_photo', 'bio', 'location',
             'github_url', 'linkedin_url', 'hourly_rate',
             'languages', 'availability',
-            'is_admin', 'is_verified',
+            'is_admin', 'is_email_verified',
             'created_at', 'updated_at', 'last_login',
         ]
         read_only_fields = fields

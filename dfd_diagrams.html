@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Trade - Visual Data Flow Diagrams (DFD)</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --primary-blue: #2563eb;
+            --accent-amber: #d97706;
+            --accent-emerald: #059669;
+            --accent-purple: #7c3aed;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: var(--primary-blue);
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .legend-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+        }
+
+        .diagram-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border-color);
+            page-break-after: always;
+        }
+
+        .diagram-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .diagram-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .svg-container {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+            padding: 10px;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* DFD Diagram SVG Elements */
+        text {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+        }
+
+        .entity-rect {
+            fill: #f8fafc;
+            stroke: #1e293b;
+            stroke-width: 2.5;
+        }
+
+        .process-circle {
+            fill: #eff6ff;
+            stroke: #2563eb;
+            stroke-width: 2.5;
+        }
+
+        .process-line {
+            stroke: #93c5fd;
+            stroke-width: 1.5;
+        }
+
+        .store-path {
+            fill: #fffbeb;
+            stroke: #d97706;
+            stroke-width: 2.5;
+        }
+
+        .store-divider {
+            stroke: #d97706;
+            stroke-width: 2;
+        }
+
+        .flow-line {
+            stroke: #475569;
+            stroke-width: 1.8;
+            fill: none;
+        }
+
+        .flow-label-bg {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 1;
+            rx: 4px;
+        }
+
+        .flow-label-text {
+            font-size: 11px;
+            font-weight: 600;
+            fill: #334155;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .diagram-card { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Skill Trade - Visual Data Flow Diagrams (DFD)</h1>
+        <p>Gane-Sarson / Yourdon Notation Visual Diagram Specification for Project Report</p>
+        <div class="legend-bar">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #f8fafc; border: 2px solid #1e293b;"></div>
+                <span>External Entity (Rectangle)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #eff6ff; border: 2px solid #2563eb; border-radius: 50%;"></div>
+                <span>Process (Circle)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fffbeb; border: 2px solid #d97706;"></div>
+                <span>Data Store (Open-Ended Rectangle)</span>
+            </div>
+            <div class="legend-item">
+                <span style="color: #475569; font-size: 18px;">➔</span>
+                <span>Data Flow (Labeled Arrow)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 1: LEVEL 0 -->
+    <div class="diagram-card">
+        <div class="diagram-title">
+            <span>Level 0 - Context Diagram</span>
+            <span class="badge">System Overview</span>
+        </div>
+        <div class="diagram-desc">
+            High-level overview representing the entire Skill Trade system as a single central process interacting with external entities.
+        </div>
+        <div class="svg-container">
+            <svg width="1150" height="720" viewBox="0 0 1150 720" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+                    </marker>
+                    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+                        <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.08"/>
+                    </filter>
+                </defs>
+
+                <!-- CENTRAL PROCESS 0.0 -->
+                <g filter="url(#shadow)">
+                    <circle cx="575" cy="360" r="105" class="process-circle"/>
+                    <line x1="475" y1="315" x2="675" y2="315" class="process-line"/>
+                    <text x="575" y="295" text-anchor="middle" font-weight="bold" font-size="16" fill="#1e40af">0.0</text>
+                    <text x="575" y="348" text-anchor="middle" font-weight="bold" font-size="18" fill="#1e3a8a">Skills Marketplace</text>
+                    <text x="575" y="375" text-anchor="middle" font-weight="bold" font-size="18" fill="#1e3a8a">System</text>
+                </g>
+
+                <!-- EXTERNAL ENTITIES -->
+                <!-- Entity: Client -->
+                <g transform="translate(60, 200)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="90" class="entity-rect"/>
+                    <text x="90" y="42" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">User (Client)</text>
+                    <text x="90" y="62" text-anchor="middle" font-size="12" fill="#64748b">[External Entity]</text>
+                </g>
+
+                <!-- Entity: Provider -->
+                <g transform="translate(60, 440)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="90" class="entity-rect"/>
+                    <text x="90" y="42" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">User (Provider)</text>
+                    <text x="90" y="62" text-anchor="middle" font-size="12" fill="#64748b">[External Entity]</text>
+                </g>
+
+                <!-- Entity: Admin -->
+                <g transform="translate(910, 315)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="90" class="entity-rect"/>
+                    <text x="90" y="42" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">Admin / Moderator</text>
+                    <text x="90" y="62" text-anchor="middle" font-size="12" fill="#64748b">[External Entity]</text>
+                </g>
+
+                <!-- External Service: Email -->
+                <g transform="translate(485, 40)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="75" class="entity-rect" style="stroke: #0284c7; fill: #f0f9ff;"/>
+                    <text x="90" y="38" text-anchor="middle" font-weight="bold" font-size="14" fill="#0369a1">Email Service</text>
+                    <text x="90" y="56" text-anchor="middle" font-size="11" fill="#0284c7">(OTP Verification)</text>
+                </g>
+
+                <!-- External Service: Cloudinary -->
+                <g transform="translate(890, 80)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="75" class="entity-rect" style="stroke: #7c3aed; fill: #f5f3ff;"/>
+                    <text x="90" y="38" text-anchor="middle" font-weight="bold" font-size="14" fill="#6d28d9">Cloudinary</text>
+                    <text x="90" y="56" text-anchor="middle" font-size="11" fill="#7c3aed">(Media Storage)</text>
+                </g>
+
+                <!-- External Service: FCM Push -->
+                <g transform="translate(485, 605)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="180" height="75" class="entity-rect" style="stroke: #059669; fill: #ecfdf5;"/>
+                    <text x="90" y="38" text-anchor="middle" font-weight="bold" font-size="14" fill="#047857">FCM Push Service</text>
+                    <text x="90" y="56" text-anchor="middle" font-size="11" fill="#059669">(Push Notifications)</text>
+                </g>
+
+                <!-- DATA FLOW ARROWS & LABELS -->
+                <!-- Client -> System -->
+                <path d="M 240,230 L 472,320" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(340, 260)">
+                    <rect x="-85" y="-12" width="170" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Registration & Hire Request</text>
+                </g>
+
+                <!-- System -> Client -->
+                <path d="M 470,360 L 240,270" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(355, 330)">
+                    <rect x="-85" y="-12" width="170" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Auth Token & Search Results</text>
+                </g>
+
+                <!-- Provider -> System -->
+                <path d="M 240,470 L 472,390" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(345, 415)">
+                    <rect x="-85" y="-12" width="170" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Skills, Portfolio, Accept/Reject</text>
+                </g>
+
+                <!-- System -> Provider -->
+                <path d="M 475,420 L 240,500" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(340, 475)">
+                    <rect x="-85" y="-12" width="170" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Hire Requests & Direct Messages</text>
+                </g>
+
+                <!-- Admin -> System -->
+                <path d="M 910,340 L 682,350" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(795, 330)">
+                    <rect x="-80" y="-12" width="160" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Moderation & Category Actions</text>
+                </g>
+
+                <!-- System -> Admin -->
+                <path d="M 682,375 L 910,375" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(795, 390)">
+                    <rect x="-80" y="-12" width="160" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Reports Queue & Analytics</text>
+                </g>
+
+                <!-- System -> Email Service -->
+                <path d="M 550,255 L 550,118" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(480, 180)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Send Verification OTP</text>
+                </g>
+
+                <!-- System -> Cloudinary -->
+                <path d="M 645,280 L 890,150" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(760, 200)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Upload Image / Attachment</text>
+                </g>
+
+                <!-- Cloudinary -> System -->
+                <path d="M 890,120 L 660,260" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(780, 160)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Return Hosted URL</text>
+                </g>
+
+                <!-- System -> FCM -->
+                <path d="M 575,465 L 575,602" class="flow-line" marker-end="url(#arrow)"/>
+                <g transform="translate(575, 535)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Push Notification Payload</text>
+                </g>
+
+            </svg>
+        </div>
+    </div>
+
+
+    <!-- DIAGRAM 2: LEVEL 1 -->
+    <div class="diagram-card">
+        <div class="diagram-title">
+            <span>Level 1 - User DFD</span>
+            <span class="badge">User Functional Subsystems</span>
+        </div>
+        <div class="diagram-desc">
+            Decomposition of major user-facing functions, showing data flow between the User, 8 core processes, and 8 database stores.
+        </div>
+        <div class="svg-container">
+            <svg width="1300" height="1100" viewBox="0 0 1300 1100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+                    </marker>
+                </defs>
+
+                <!-- ENTITY: USER -->
+                <g transform="translate(40, 500)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="140" height="100" class="entity-rect"/>
+                    <text x="70" y="45" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">User</text>
+                    <text x="70" y="65" text-anchor="middle" font-size="12" fill="#475569">(Client/Provider)</text>
+                </g>
+
+                <!-- PROCESSES (Circles) -->
+                <!-- P1.0 -->
+                <g transform="translate(320, 140)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">1.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Auth & Account</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Management</text>
+                </g>
+
+                <!-- P2.0 -->
+                <g transform="translate(680, 140)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">2.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Profile &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Portfolio</text>
+                </g>
+
+                <!-- P3.0 -->
+                <g transform="translate(1040, 140)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">3.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Marketplace &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Discovery</text>
+                </g>
+
+                <!-- P4.0 -->
+                <g transform="translate(320, 480)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">4.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Hiring &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Contracts</text>
+                </g>
+
+                <!-- P5.0 -->
+                <g transform="translate(680, 480)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">5.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Direct Messaging</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">& Attachments</text>
+                </g>
+
+                <!-- P6.0 -->
+                <g transform="translate(1040, 480)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">6.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Ratings &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Reviews</text>
+                </g>
+
+                <!-- P7.0 -->
+                <g transform="translate(480, 820)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">7.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Bookmarking &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Favorites</text>
+                </g>
+
+                <!-- P8.0 -->
+                <g transform="translate(880, 820)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">8.0</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Notifications</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">System</text>
+                </g>
+
+                <!-- DATA STORES (Gane-Sarson Open-Ended Rectangles) -->
+                <!-- D1: Users DB -->
+                <g transform="translate(470, 270)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D1</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Users DB</text>
+                </g>
+
+                <!-- D2: Profiles & Skills DB -->
+                <g transform="translate(830, 270)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D2</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Profiles & Skills DB</text>
+                </g>
+
+                <!-- D3: Listings DB -->
+                <g transform="translate(1100, 270)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D3</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Listings DB</text>
+                </g>
+
+                <!-- D4: Contracts DB -->
+                <g transform="translate(470, 610)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D4</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Contracts DB</text>
+                </g>
+
+                <!-- D5: Messages DB -->
+                <g transform="translate(830, 610)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D5</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Messages DB</text>
+                </g>
+
+                <!-- D6: Reviews DB -->
+                <g transform="translate(1100, 610)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D6</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Reviews DB</text>
+                </g>
+
+                <!-- D7: Bookmarks DB -->
+                <g transform="translate(400, 960)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D7</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Bookmarks DB</text>
+                </g>
+
+                <!-- D8: Notifications DB -->
+                <g transform="translate(800, 960)">
+                    <path d="M 170,0 L 0,0 L 0,45 L 170,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D8</text>
+                    <text x="107.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Notifications DB</text>
+                </g>
+
+                <!-- FLOWS CONNECTING PROCESSES & STORES -->
+
+                <!-- User to P1.0 -->
+                <path d="M 180,510 L 290,190" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(210, 330)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Credentials & OTP</text>
+                </g>
+
+                <!-- P1.0 to D1 -->
+                <path d="M 378,140 L 470,270" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(440, 190)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Save User Record</text>
+                </g>
+
+                <!-- User to P2.0 -->
+                <path d="M 180,520 L 625,160" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(360, 310)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Profile & Portfolio Info</text>
+                </g>
+
+                <!-- P2.0 to D2 -->
+                <path d="M 735,165 L 830,270" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(800, 205)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Store User Skill Data</text>
+                </g>
+
+                <!-- User to P3.0 -->
+                <path d="M 180,500 L 985,160" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(560, 270)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Search Query & Filters</text>
+                </g>
+
+                <!-- D3 to P3.0 -->
+                <path d="M 1150,270 L 1090,180" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(1140, 215)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Fetch Active Skills</text>
+                </g>
+
+                <!-- User to P4.0 -->
+                <path d="M 180,540 L 262,500" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(220, 500)">
+                    <rect x="-45" y="-12" width="90" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Hire Request</text>
+                </g>
+
+                <!-- P4.0 to D4 -->
+                <path d="M 378,480 L 470,610" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(440, 530)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Write Contract State</text>
+                </g>
+
+                <!-- User to P5.0 -->
+                <path d="M 180,550 L 622,490" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(400, 505)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Send Chat & Attachment</text>
+                </g>
+
+                <!-- P5.0 to D5 -->
+                <path d="M 735,505 L 830,610" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(800, 545)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Store Messages</text>
+                </g>
+
+                <!-- User to P6.0 -->
+                <path d="M 180,560 L 982,490" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(560, 560)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Submit Review & Rating</text>
+                </g>
+
+                <!-- P6.0 to D6 -->
+                <path d="M 1090,520 L 1150,610" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(1140, 550)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Write Peer Review</text>
+                </g>
+
+                <!-- User to P7.0 -->
+                <path d="M 160,595 L 430,800" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(280, 710)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Toggle Favorite</text>
+                </g>
+
+                <!-- P7.0 to D7 -->
+                <path d="M 480,878 L 480,960" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(480, 920)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Save Bookmark</text>
+                </g>
+
+                <!-- P4.0 / P5.0 to P8.0 Notifications Trigger -->
+                <path d="M 378,510 L 825,810" class="flow-line" stroke-dasharray="4" marker-end="url(#arrow1)"/>
+                <g transform="translate(620, 680)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Trigger Event Notification</text>
+                </g>
+
+                <!-- P8.0 to D8 -->
+                <path d="M 880,878 L 880,960" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(880, 920)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Store Notification</text>
+                </g>
+
+                <!-- D8 to User -->
+                <path d="M 800,970 L 100,590" class="flow-line" marker-end="url(#arrow1)"/>
+                <g transform="translate(380, 840)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Deliver In-App Alert</text>
+                </g>
+
+            </svg>
+        </div>
+    </div>
+
+
+    <!-- DIAGRAM 3: LEVEL 2 -->
+    <div class="diagram-card">
+        <div class="diagram-title">
+            <span>Level 2 - Admin DFD</span>
+            <span class="badge">Moderation & Oversight Subsystems</span>
+        </div>
+        <div class="diagram-desc">
+            Detailed view of Admin processes: auth & dashboard, report resolution, user suspension, contract dispute handling, and system configuration.
+        </div>
+        <div class="svg-container">
+            <svg width="1250" height="900" viewBox="0 0 1250 900" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+                    </marker>
+                </defs>
+
+                <!-- ENTITY: ADMIN -->
+                <g transform="translate(50, 400)" filter="url(#shadow)">
+                    <rect x="0" y="0" width="150" height="100" class="entity-rect"/>
+                    <text x="75" y="45" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">Admin /</text>
+                    <text x="75" y="65" text-anchor="middle" font-weight="bold" font-size="15" fill="#0f172a">Moderator</text>
+                </g>
+
+                <!-- PROCESSES (Circles) -->
+                <!-- P9.1 -->
+                <g transform="translate(350, 150)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">9.1</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Admin Auth &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Dashboard</text>
+                </g>
+
+                <!-- P9.2 -->
+                <g transform="translate(750, 150)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">9.2</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Content Moderation</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">& Reports Review</text>
+                </g>
+
+                <!-- P9.3 -->
+                <g transform="translate(1080, 150)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">9.3</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">User Suspension</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">& Ban Management</text>
+                </g>
+
+                <!-- P9.4 -->
+                <g transform="translate(480, 620)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">9.4</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Contract Dispute</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">& Oversights</text>
+                </g>
+
+                <!-- P9.5 -->
+                <g transform="translate(900, 620)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="58" class="process-circle"/>
+                    <line x1="-46" y1="-15" x2="46" y2="-15" class="process-line"/>
+                    <text x="0" y="-27" text-anchor="middle" font-weight="bold" font-size="13" fill="#1e40af">9.5</text>
+                    <text x="0" y="4" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">System Config &</text>
+                    <text x="0" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">Analytics</text>
+                </g>
+
+                <!-- DATA STORES -->
+                <!-- D1: Users DB -->
+                <g transform="translate(520, 290)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D1</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Users DB</text>
+                </g>
+
+                <!-- D9: Reports DB -->
+                <g transform="translate(900, 290)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D9</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Reports DB</text>
+                </g>
+
+                <!-- D4: Contracts DB -->
+                <g transform="translate(300, 770)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D4</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Contracts DB</text>
+                </g>
+
+                <!-- D6: Reviews DB -->
+                <g transform="translate(680, 770)">
+                    <path d="M 160,0 L 0,0 L 0,45 L 160,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D6</text>
+                    <text x="102.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Reviews DB</text>
+                </g>
+
+                <!-- D10: System Settings DB -->
+                <g transform="translate(1000, 770)">
+                    <path d="M 180,0 L 0,0 L 0,45 L 180,45" class="store-path"/>
+                    <line x1="45" y1="0" x2="45" y2="45" class="store-divider"/>
+                    <text x="22.5" y="27" text-anchor="middle" font-weight="bold" fill="#b45309">D10</text>
+                    <text x="112.5" y="27" text-anchor="middle" font-weight="bold" fill="#78350f">Admin Settings DB</text>
+                </g>
+
+                <!-- FLOWS -->
+                <!-- Admin to P9.1 -->
+                <path d="M 200,410 L 310,195" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(240, 290)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Admin Login Data</text>
+                </g>
+
+                <!-- D1 to P9.1 -->
+                <path d="M 520,300 L 400,190" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(460, 230)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Verify Admin (is_admin)</text>
+                </g>
+
+                <!-- Admin to P9.2 -->
+                <path d="M 200,420 L 700,185" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(430, 310)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Resolve Report Command</text>
+                </g>
+
+                <!-- D9 to P9.2 -->
+                <path d="M 900,300 L 795,190" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(860, 235)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Fetch User Reports</text>
+                </g>
+
+                <!-- P9.2 to D9 -->
+                <path d="M 770,205 L 920,290" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(850, 260)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Update Report Status</text>
+                </g>
+
+                <!-- Admin to P9.3 -->
+                <path d="M 200,430 L 1030,180" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(600, 340)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Suspend/Deactivate Cmd</text>
+                </g>
+
+                <!-- P9.3 to D1 -->
+                <path d="M 1030,175 L 680,300" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(860, 205)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Update is_active / soft_delete</text>
+                </g>
+
+                <!-- Admin to P9.4 -->
+                <path d="M 200,450 L 430,600" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(310, 540)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Arbitrate Contract Dispute</text>
+                </g>
+
+                <!-- D4 to P9.4 -->
+                <path d="M 380,770 L 450,670" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(400, 715)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Read Contract Log</text>
+                </g>
+
+                <!-- P9.4 to D4 -->
+                <path d="M 450,670 L 380,770" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(460, 745)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Update Status (Cancel/Done)</text>
+                </g>
+
+                <!-- Admin to P9.5 -->
+                <path d="M 200,460 L 850,605" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(540, 520)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Update Admin Settings</text>
+                </g>
+
+                <!-- P9.5 to D10 -->
+                <path d="M 940,665 L 1000,770" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(990, 710)">
+                    <rect x="-60" y="-12" width="120" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Write Key-Value Config</text>
+                </g>
+
+                <!-- D10 to P9.5 -->
+                <path d="M 1040,770 L 950,665" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(940, 740)">
+                    <rect x="-55" y="-12" width="110" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">Fetch Current Settings</text>
+                </g>
+
+                <!-- P9.5 to Admin -->
+                <path d="M 850,630 L 200,480" class="flow-line" marker-end="url(#arrow2)"/>
+                <g transform="translate(500, 580)">
+                    <rect x="-65" y="-12" width="130" height="24" class="flow-label-bg"/>
+                    <text x="0" y="4" text-anchor="middle" class="flow-label-text">System Analytics Report</text>
+                </g>
+
+            </svg>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -3,6 +3,8 @@ Messaging serializers for Skill Swap.
 """
 
 from rest_framework import serializers
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from .models import Message
 
 
@@ -44,7 +46,22 @@ class MessageCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['sender'] = self.context['request'].user
-        return super().create(validated_data)
+        message = super().create(validated_data)
+        
+        # Broadcast to receiver
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'user_{message.receiver.id}',
+            {
+                'type': 'new_message',
+                'message': MessageSerializer(message, context=self.context).data
+            }
+        )
+        return message
+
+    def to_representation(self, instance):
+        """Return the full representation after creation."""
+        return MessageSerializer(instance, context=self.context).data
 
 
 class ConversationSerializer(serializers.Serializer):

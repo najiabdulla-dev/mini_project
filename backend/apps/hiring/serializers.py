@@ -20,13 +20,13 @@ class HireRequestSerializer(serializers.ModelSerializer):
             'id', 'client', 'client_name', 'client_email',
             'provider', 'provider_name', 'provider_email',
             'title', 'description', 'budget', 'deadline',
-            'attachments', 'status', 'rejection_reason',
+            'attachments', 'status', 'is_seen', 'rejection_reason',
             'completed_at', 'created_at', 'updated_at',
         ]
         read_only_fields = [
             'id', 'client', 'client_name', 'client_email',
             'provider_name', 'provider_email',
-            'status', 'rejection_reason', 'completed_at',
+            'status', 'is_seen', 'rejection_reason', 'completed_at',
             'created_at', 'updated_at',
         ]
 

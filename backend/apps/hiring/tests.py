@@ -18,11 +18,11 @@ class HireRequestAPITest(TestCase):
         self.client_api = APIClient()
         self.user_client = User.objects.create_user(
             email='client@test.com', password='TestPass123!',
-            first_name='Client', last_name='User', is_verified=True,
+            first_name='Client', last_name='User', is_email_verified=True,
         )
         self.user_provider = User.objects.create_user(
             email='provider@test.com', password='TestPass123!',
-            first_name='Provider', last_name='User', is_verified=True,
+            first_name='Provider', last_name='User', is_email_verified=True,
         )
 
     def test_create_hire_request(self):

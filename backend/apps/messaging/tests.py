@@ -18,11 +18,11 @@ class MessageAPITest(TestCase):
         self.client_api = APIClient()
         self.sender = User.objects.create_user(
             email='sender@test.com', password='TestPass123!',
-            first_name='Sender', last_name='User', is_verified=True,
+            first_name='Sender', last_name='User', is_email_verified=True,
         )
         self.receiver = User.objects.create_user(
             email='receiver@test.com', password='TestPass123!',
-            first_name='Receiver', last_name='User', is_verified=True,
+            first_name='Receiver', last_name='User', is_email_verified=True,
         )
 
     def test_send_message(self):

@@ -30,8 +30,8 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/reviews/', include('apps.reviews.urls')),
     path('api/bookmarks/', include('apps.bookmarks.urls')),
-    # path('api/reports/', include('apps.reports.urls')),
-    # path('api/admin-panel/', include('apps.admin_panel.urls')),
+    path('api/reports/', include('apps.reports.urls')),
+    path('api/admin-panel/', include('apps.admin_panel.urls')),
 ]
 
 # Serve media files in development

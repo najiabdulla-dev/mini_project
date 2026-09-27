@@ -29,7 +29,7 @@ class UserModelTests(TestCase):
         self.assertEqual(user.email, 'test@example.com')
         self.assertTrue(user.check_password('StrongP@ss1'))
         self.assertFalse(user.is_admin)
-        self.assertFalse(user.is_verified)
+        self.assertFalse(user.is_email_verified)
         self.assertFalse(user.is_deleted)
 
     def test_create_superuser(self):
@@ -43,7 +43,7 @@ class UserModelTests(TestCase):
         self.assertTrue(admin.is_admin)
         self.assertTrue(admin.is_staff)
         self.assertTrue(admin.is_superuser)
-        self.assertTrue(admin.is_verified)
+        self.assertTrue(admin.is_email_verified)
 
     def test_create_user_without_email_raises(self):
         """Test that creating a user without email raises ValueError."""
@@ -208,7 +208,7 @@ class VerifyOTPAPITests(TestCase):
             password='StrongP@ss1',
             first_name='Verify',
             last_name='User',
-            is_verified=False,
+            is_email_verified=False,
         )
         self.otp = OTPCode.create_otp(
             user=self.user,
@@ -221,7 +221,7 @@ class VerifyOTPAPITests(TestCase):
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
-        self.assertTrue(self.user.is_verified)
+        self.assertTrue(self.user.is_email_verified)
 
     def test_verify_otp_invalid_code(self):
         """Test verification with wrong code fails."""
@@ -249,7 +249,7 @@ class LoginAPITests(TestCase):
             password='StrongP@ss1',
             first_name='Login',
             last_name='User',
-            is_verified=True,
+            is_email_verified=True,
         )
 
     def test_login_success(self):
@@ -269,7 +269,7 @@ class LoginAPITests(TestCase):
 
     def test_login_unverified_email(self):
         """Test login with unverified email fails."""
-        self.user.is_verified = False
+        self.user.is_email_verified = False
         self.user.save()
         data = {'email': 'login@example.com', 'password': 'StrongP@ss1'}
         response = self.client.post(self.url, data, format='json')
@@ -286,7 +286,7 @@ class LogoutAPITests(TestCase):
             password='StrongP@ss1',
             first_name='Logout',
             last_name='User',
-            is_verified=True,
+            is_email_verified=True,
         )
         # Login to get tokens
         login_response = self.client.post(
@@ -318,7 +318,7 @@ class MeAPITests(TestCase):
             password='StrongP@ss1',
             first_name='Me',
             last_name='User',
-            is_verified=True,
+            is_email_verified=True,
         )
         login_response = self.client.post(
             '/api/auth/login/',
@@ -365,7 +365,7 @@ class ChangePasswordAPITests(TestCase):
             password='StrongP@ss1',
             first_name='Change',
             last_name='Password',
-            is_verified=True,
+            is_email_verified=True,
         )
         login_response = self.client.post(
             '/api/auth/login/',

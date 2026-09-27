@@ -135,7 +135,7 @@ class CertificateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'name', 'issuer',
             'credential_url', 'credential_id',
-            'issue_date', 'expiry_date', 'image',
+            'issue_date', 'expiry_date', 'description', 'image',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
@@ -207,20 +207,20 @@ class UserProfileSerializer(serializers.Serializer):
 
     def get_skills(self, obj):
         return UserSkillSerializer(
-            obj.user_skills.filter(is_active=True), many=True
+            obj.user_skills.filter(is_active=True), many=True, context=self.context
         ).data
 
     def get_experiences(self, obj):
-        return ExperienceSerializer(obj.experiences.all(), many=True).data
+        return ExperienceSerializer(obj.experiences.all(), many=True, context=self.context).data
 
     def get_education(self, obj):
-        return EducationSerializer(obj.education_entries.all(), many=True).data
+        return EducationSerializer(obj.education_entries.all(), many=True, context=self.context).data
 
     def get_certificates(self, obj):
-        return CertificateSerializer(obj.certificates.all(), many=True).data
+        return CertificateSerializer(obj.certificates.all(), many=True, context=self.context).data
 
     def get_portfolio(self, obj):
-        return PortfolioSerializer(obj.portfolio_items.all(), many=True).data
+        return PortfolioSerializer(obj.portfolio_items.all(), many=True, context=self.context).data
 
     def get_average_rating(self, obj):
         from django.db.models import Avg

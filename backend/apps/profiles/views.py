@@ -23,6 +23,8 @@ from .serializers import (
     PortfolioSerializer,
     UserProfileSerializer,
 )
+from .models import RecommendationHistory
+from . import ai_utils
 
 
 class BaseProfileViewSet(viewsets.ModelViewSet):
@@ -142,7 +144,7 @@ class UserProfileView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return User.objects.filter(
-            is_active=True, is_deleted=False, is_verified=True,
+            is_active=True, is_deleted=False, is_email_verified=True,
         )
 
 
@@ -165,7 +167,13 @@ class UserProfileListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.filter(
-            is_active=True, is_deleted=False, is_verified=True,
+            is_active=True, is_deleted=False, is_email_verified=True,
+        ).exclude(
+            id=self.request.user.id
+        ).exclude(
+            is_admin=True
+        ).exclude(
+            is_staff=True
         ).prefetch_related(
             'user_skills__skill__category',
             'experiences',
@@ -181,15 +189,81 @@ class RecommendedProfileListView(generics.ListAPIView):
     """
     GET /api/profiles/recommended/
 
-    Get a curated list of recommended profiles for the dashboard.
+    Get a curated list of recommended profiles for the dashboard using
+    AI-based content recommendation (sentence embeddings + cosine similarity).
     Returns 5 top profiles excluding the current user.
     """
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return User.objects.filter(
-            is_active=True, is_deleted=False, is_verified=True,
+        from django.db.models import Case, When
+        from django.utils import timezone
+        
+        current_user = self.request.user
+        
+        # 1. Fetch all eligible candidate profiles
+        candidates = list(User.objects.filter(
+            is_active=True, is_deleted=False, is_email_verified=True,
         ).exclude(
-            id=self.request.user.id
-        ).order_by('-created_at')[:5]
+            id=current_user.id
+        ).exclude(
+            is_admin=True
+        ).exclude(
+            is_staff=True
+        ).prefetch_related('user_skills'))
+        
+        if not candidates:
+            return User.objects.none()
+            
+        # 2. Compute AI Similarity using pre-generated sentence embeddings
+        current_embedding = current_user.profile_embedding
+        if not current_embedding:
+            # Fallback if current user has no embedding generated yet
+            ai_utils.update_user_embedding(current_user)
+            current_user.refresh_from_db()
+            current_embedding = current_user.profile_embedding
+            
+        # Fetch recommendation history for the rotation factor
+        # Get count of times each user was recommended to current user
+        history = RecommendationHistory.objects.filter(viewer=current_user).values_list('shown_user_id', flat=True)
+        exposure_counts = {}
+        for uid in history:
+            exposure_counts[uid] = exposure_counts.get(uid, 0) + 1
+            
+        scored_candidates = []
+        for candidate in candidates:
+            candidate_embedding = candidate.profile_embedding
+            similarity_score = 0
+            if candidate_embedding and current_embedding:
+                similarity_score = ai_utils.cosine_similarity(current_embedding, candidate_embedding)
+                
+            # Rotation factor: Heavily penalize users who have been shown frequently
+            # so that everyone gets shown eventually.
+            times_shown = exposure_counts.get(candidate.id, 0)
+            rotation_penalty = times_shown * 0.5  # Reduces score significantly per view
+            
+            # Combine AI similarity score and rotation penalty
+            final_score = similarity_score - rotation_penalty
+            scored_candidates.append((final_score, candidate))
+            
+        # 3. Sort by highest score
+        scored_candidates.sort(key=lambda x: x[0], reverse=True)
+        
+        # 4. Extract top 5
+        top_candidates = [candidate for score, candidate in scored_candidates[:5]]
+        top_ids = [c.id for c in top_candidates]
+        
+        if not top_ids:
+            return User.objects.none()
+            
+        # 5. Log them as shown in the tracking table
+        now = timezone.now()
+        history_records = [
+            RecommendationHistory(viewer=current_user, shown_user_id=cid, shown_at=now)
+            for cid in top_ids
+        ]
+        RecommendationHistory.objects.bulk_create(history_records)
+            
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(top_ids)])
+        return User.objects.filter(pk__in=top_ids).order_by(preserved)

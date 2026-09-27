@@ -19,7 +19,7 @@ class UserSkillAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.category = Category.objects.create(name='Web Development')
         self.skill = Skill.objects.create(name='Django', category=self.category)
@@ -53,7 +53,7 @@ class ExperienceAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.client.force_authenticate(self.user)
 
@@ -87,11 +87,11 @@ class UserProfileAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.other = User.objects.create_user(
             email='other@test.com', password='TestPass123!',
-            first_name='Other', last_name='User', is_verified=True,
+            first_name='Other', last_name='User', is_email_verified=True,
         )
         self.client.force_authenticate(self.user)
 

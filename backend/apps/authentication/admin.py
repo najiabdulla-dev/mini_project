@@ -13,11 +13,11 @@ class UserAdmin(BaseUserAdmin):
 
     model = User
     list_display = [
-        'email', 'first_name', 'last_name', 'is_verified',
+        'email', 'first_name', 'last_name', 'is_email_verified',
         'is_admin', 'is_active', 'availability', 'created_at',
     ]
     list_filter = [
-        'is_verified', 'is_admin', 'is_active', 'is_deleted',
+        'is_email_verified', 'is_admin', 'is_active', 'is_deleted',
         'availability', 'created_at',
     ]
     search_fields = ['email', 'first_name', 'last_name', 'location']
@@ -34,7 +34,7 @@ class UserAdmin(BaseUserAdmin):
         }),
         ('Status', {
             'fields': (
-                'is_verified', 'is_admin', 'is_active',
+                'is_email_verified', 'is_admin', 'is_active',
                 'is_staff', 'is_superuser', 'is_deleted', 'deleted_at',
             ),
         }),
@@ -55,7 +55,7 @@ class UserAdmin(BaseUserAdmin):
             'fields': (
                 'email', 'first_name', 'last_name',
                 'password1', 'password2',
-                'is_admin', 'is_verified',
+                'is_admin', 'is_email_verified',
             ),
         }),
     )

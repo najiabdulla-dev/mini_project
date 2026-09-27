@@ -135,6 +135,7 @@ class Certificate(TimestampedModel):
     credential_id = models.CharField(max_length=200, blank=True, default='')
     issue_date = models.DateField()
     expiry_date = models.DateField(null=True, blank=True)
+    description = models.TextField(blank=True, default='')
     image = models.ImageField(upload_to='certificates/', blank=True, null=True)
 
     class Meta:
@@ -181,3 +182,30 @@ class Portfolio(TimestampedModel):
 
     def __str__(self):
         return self.title
+
+
+class RecommendationHistory(models.Model):
+    """Tracks which users have been recommended to a viewer to ensure rotation."""
+    viewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='viewed_recommendations'
+    )
+    shown_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='shown_in_recommendations'
+    )
+    shown_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'recommendation_history'
+        verbose_name = 'Recommendation History'
+        verbose_name_plural = 'Recommendation Histories'
+        indexes = [
+            models.Index(fields=['viewer', 'shown_user']),
+            models.Index(fields=['viewer', '-shown_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.viewer.email} saw {self.shown_user.email} at {self.shown_at}"

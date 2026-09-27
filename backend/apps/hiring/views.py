@@ -63,6 +63,17 @@ class HireRequestViewSet(viewsets.ModelViewSet):
             return HireRequestStatusSerializer
         return HireRequestSerializer
 
+    def perform_create(self, serializer):
+        hire_request = serializer.save()
+        
+        Notification.objects.create(
+            user=hire_request.provider,
+            title='New Hire Request',
+            message=f'{hire_request.client.get_full_name()} has sent you a hire request for "{hire_request.title}".',
+            type=Notification.Type.HIRE_REQUEST,
+            data={'hire_request_id': hire_request.id}
+        )
+
     def perform_destroy(self, instance):
         """Only pending requests can be deleted, and only by the client."""
         if instance.client != self.request.user:
@@ -111,7 +122,7 @@ class HireRequestViewSet(viewsets.ModelViewSet):
                 'to': HireRequest.Status.IN_PROGRESS,
             },
             'complete': {
-                'allowed_by': 'both',
+                'allowed_by': 'client',
                 'from': [HireRequest.Status.IN_PROGRESS],
                 'to': HireRequest.Status.COMPLETED,
             },
@@ -218,4 +229,27 @@ class HireRequestViewSet(viewsets.ModelViewSet):
             'success': True,
             'message': f'Hire request {action_name}ed successfully.',
             'data': HireRequestSerializer(hire_request).data,
+        })
+
+    @extend_schema(
+        responses={200: dict},
+        tags=['Hiring'],
+    )
+    @action(detail=False, methods=['post'], url_path='mark-seen')
+    def mark_seen(self, request):
+        """
+        POST /api/hiring/mark-seen/
+
+        Mark all incoming hire requests for the current user as seen.
+        """
+        user = request.user
+        updated_count = HireRequest.objects.filter(
+            provider=user,
+            is_seen=False,
+            status=HireRequest.Status.PENDING
+        ).update(is_seen=True)
+
+        return Response({
+            'success': True,
+            'message': f'Marked {updated_count} incoming requests as seen.',
         })

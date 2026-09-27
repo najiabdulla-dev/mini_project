@@ -23,6 +23,11 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
 )
+from .utils import generate_and_send_otp
+from .models import EmailOTP
+from django.utils import timezone
+from django.db import transaction
+import smtplib
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -43,13 +48,46 @@ class RegisterView(CreateAPIView):
         tags=['Authentication'],
     )
     def create(self, request, *args, **kwargs):
+        email = request.data.get('email', '').lower()
+        if email:
+            # If user exists but is not verified, delete them so they can retry registration
+            unverified_user = User.objects.filter(email=email, is_email_verified=False).first()
+            if unverified_user:
+                unverified_user.delete()
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        
+        try:
+            with transaction.atomic():
+                user = serializer.save()
+                generate_and_send_otp(user)
+        except smtplib.SMTPException as e:
+            logger.error(f"SMTP Error during registration: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Failed to send verification email. Please check the email server configuration.',
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            logger.error(f"Unexpected error during registration: {e}\n{tb}")
+            return Response(
+                {
+                    'success': False,
+                    'message': f"Internal Server Error during registration: {type(e).__name__} - {str(e)}",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         return Response(
             {
                 'success': True,
-                'message': 'Registration successful.',
+                'message': 'Registration successful. Please check your email for verification code.',
+                'email': user.email
             },
             status=status.HTTP_201_CREATED
         )
@@ -167,3 +205,96 @@ class MeView(RetrieveUpdateAPIView):
             'message': 'Profile updated successfully.',
             'data': user_data,
         })
+
+
+class VerifyOTPView(APIView):
+    """
+    POST /api/auth/verify-otp/
+    
+    Verifies the email OTP.
+    """
+    permission_classes = [AllowAny]
+    throttle_scope = 'login'
+
+    @extend_schema(tags=['Authentication'])
+    def post(self, request):
+        email = request.data.get('email', '').lower()
+        otp_code = request.data.get('otp', '')
+
+        if not email or not otp_code:
+            return Response({'success': False, 'message': 'Email and OTP are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'success': False, 'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_email_verified:
+            return Response({'success': True, 'message': 'Email already verified.'}, status=status.HTTP_200_OK)
+
+        # Get latest unexpired unused OTP
+        otp_record = EmailOTP.objects.filter(
+            user=user, 
+            is_used=False,
+            expires_at__gt=timezone.now()
+        ).first()
+
+        if not otp_record:
+            return Response({'success': False, 'message': 'Invalid or expired OTP code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if otp_record.otp_code != otp_code:
+            otp_record.attempts += 1
+            if otp_record.attempts >= 5:
+                otp_record.is_used = True
+            otp_record.save(update_fields=['attempts', 'is_used'])
+            return Response({'success': False, 'message': f'Invalid code. {5 - otp_record.attempts} attempts remaining.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Success
+        otp_record.is_used = True
+        otp_record.save(update_fields=['is_used'])
+        user.is_email_verified = True
+        user.save(update_fields=['is_email_verified', 'updated_at'])
+
+        return Response({'success': True, 'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+
+
+class ResendOTPView(APIView):
+    """
+    POST /api/auth/resend-otp/
+    
+    Resends the email OTP if cooldown has passed.
+    """
+    permission_classes = [AllowAny]
+    throttle_scope = 'login'
+
+    @extend_schema(tags=['Authentication'])
+    def post(self, request):
+        email = request.data.get('email', '').lower()
+
+        if not email:
+            return Response({'success': False, 'message': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'success': False, 'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_email_verified:
+            return Response({'success': False, 'message': 'Account already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check cooldown (60 seconds)
+        last_otp = EmailOTP.objects.filter(user=user).first()
+        if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < 60:
+            return Response({'success': False, 'message': 'Please wait 60 seconds before requesting a new OTP.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        try:
+            generate_and_send_otp(user)
+        except smtplib.SMTPException as e:
+            logger.error(f"SMTP Error during resend: {e}")
+            return Response({'success': False, 'message': 'Failed to send verification email. Please check email configuration.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            logger.error(f"Unexpected error during resend: {e}")
+            return Response({'success': False, 'message': f'Internal Server Error: {type(e).__name__} - {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'success': True, 'message': 'OTP sent successfully.'}, status=status.HTTP_200_OK)
+

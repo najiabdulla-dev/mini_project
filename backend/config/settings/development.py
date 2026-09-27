@@ -84,3 +84,12 @@ LOGGING = {
         },
     },
 }
+
+# =============================================================================
+# CHANNELS - Use InMemoryChannelLayer for local dev to avoid needing Redis
+# =============================================================================
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}

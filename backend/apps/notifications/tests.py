@@ -18,7 +18,7 @@ class NotificationAPITest(TestCase):
         self.client_api = APIClient()
         self.user = User.objects.create_user(
             email='user@test.com', password='TestPass123!',
-            first_name='Test', last_name='User', is_verified=True,
+            first_name='Test', last_name='User', is_email_verified=True,
         )
         self.notification = Notification.objects.create(
             user=self.user,

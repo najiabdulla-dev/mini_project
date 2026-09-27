@@ -18,7 +18,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'reviewer', 'reviewer_name', 'reviewer_photo',
             'reviewee', 'reviewee_name',
-            'hire_request', 'rating', 'comment', 'screenshot',
+            'hire_request', 'rating', 'comment',
             'is_reported', 'created_at', 'updated_at',
         ]
         read_only_fields = [
@@ -32,7 +32,7 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ['id', 'reviewee', 'hire_request', 'rating', 'comment', 'screenshot']
+        fields = ['id', 'reviewee', 'hire_request', 'rating', 'comment']
         read_only_fields = ['id']
 
     def validate_hire_request(self, value):
@@ -78,3 +78,9 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['reviewer'] = self.context['request'].user
         return super().create(validated_data)
+
+    def to_representation(self, instance):
+        # The frontend expects the full Review model (with reviewer, reviewer_name, created_at, etc.)
+        # when a review is returned. By default, DRF only returns the write fields specified in Meta.
+        # This override ensures the response matches the full ReviewSerializer structure.
+        return ReviewSerializer(instance, context=self.context).data

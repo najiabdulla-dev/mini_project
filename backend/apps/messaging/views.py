@@ -142,7 +142,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         # Sort by last message time
         conversations.sort(key=lambda x: x['last_message_at'], reverse=True)
-        serializer = ConversationSerializer(conversations, many=True)
+        serializer = ConversationSerializer(conversations, many=True, context={'request': request})
         return Response(serializer.data)
 
     @extend_schema(tags=['Messaging'])

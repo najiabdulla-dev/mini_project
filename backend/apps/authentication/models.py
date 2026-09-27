@@ -32,7 +32,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_admin', True)
-        extra_fields.setdefault('is_verified', True)
+        extra_fields.setdefault('is_email_verified', True)
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -102,6 +102,10 @@ class User(AbstractUser):
         default=Availability.AVAILABLE,
         db_index=True,
     )
+    profile_embedding = models.JSONField(
+        blank=True, null=True,
+        help_text='AI sentence embedding of user profile text (skills, bio, experience)'
+    )
 
     # -------------------------------------------------------------------------
     # Status fields
@@ -110,8 +114,8 @@ class User(AbstractUser):
         default=False, db_index=True,
         help_text='Designates whether this user has admin/moderator privileges.',
     )
-    is_verified = models.BooleanField(
-        default=True, db_index=True,
+    is_email_verified = models.BooleanField(
+        default=False, db_index=True,
         help_text='Designates whether this user has verified their email.',
     )
     is_active = models.BooleanField(default=True)
@@ -140,7 +144,7 @@ class User(AbstractUser):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['email'], name='idx_user_email'),
-            models.Index(fields=['is_verified', 'is_active'], name='idx_user_status'),
+            models.Index(fields=['is_email_verified', 'is_active'], name='idx_user_status'),
             models.Index(fields=['availability'], name='idx_user_availability'),
             models.Index(fields=['location'], name='idx_user_location'),
         ]
@@ -163,4 +167,24 @@ class User(AbstractUser):
         self.save(update_fields=['is_deleted', 'is_active', 'deleted_at', 'updated_at'])
 
 
+class EmailOTP(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='otp_codes'
+    )
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
 
+    class Meta:
+        db_table = 'email_otps'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_used', 'expires_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.user.email} - {self.otp_code}'
